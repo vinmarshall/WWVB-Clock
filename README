@@ -1,0 +1,9 @@
+Code for the WWVB Clock in Popular Science's April 2010 issue.
+
+It is, at present, less fully developed than it could concievably be.  It 
+lacks support for things like time zones, and special, exciting messages
+to announce upcoming Leap Seconds.  And that, coders, is where you come in.
+
+Furthermore, the project was concieved as a basis for hacking on WWVB time code
+signal reception.  So, get to hacking.
+
