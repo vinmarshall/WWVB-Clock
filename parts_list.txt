@@ -1,0 +1,26 @@
+For the Clock:
+
+- Arduino Duemilanove USB Board - $29.95
+http://www.sparkfun.com/commerce/product_info.php?products_id=666
+
+- Maxim DS1307 Real Time Clock Module - $19.95
+http://www.sparkfun.com/commerce/product_info.php?products_id=99
+
+- 16x2 Character LCD - $14.95
+http://www.sparkfun.com/commerce/product_info.php?products_id=791
+
+- C-Max CMMR-6P-60 WWVB Receiver Module - $10.70
+http://search.digikey.com/scripts/DkSearch/dksus.dll?vendor=0&keywords=cmmr-6p-60
+
+- Miscellaneous
+  - Bank of 8 DIP Switches
+  - Front panel light or LED. Biased transistor to drive it, if a light
+  - Power switch, power connectors, and a 5V power supply
+  - Power supply filtering capacitors: 0.1 uF and 1 uF
+
+
+For the WWVB Signal Simulator:
+
+- Arduino Duemilanove USB Board - $29.95
+
+
