@@ -1,0 +1,31 @@
+1. Buy, build, or re-purpose an enclosure for your radio clock.  Mine
+   was made from a section of steel 4" x 4" square tube.
+
+2. Build the external circuitry and attach the Real Time Clock 
+   and WWVB modules to the auxiliary circuit board.  Connect 
+   leads to the Arduino I/O pins as you go.  Follow the schematic.
+
+3. Wire the connections between the Arduino and the display, a 16x2 
+   character LCD in this case.  
+
+4. Download the software and program the Arduino.
+
+5. Set the dip switches to indicate your time zone. (Future.  Time zones
+   are not implemented in verison 1 of the WWVB clock code.)
+
+6. Fire up your circuit and test it out.  You should initially see an 
+   incorrect time.  As soon as the receiver is able to pull in the 
+   WWVB signal - which may take until night fall, especially in RF 
+   noisy environments far from Colorado - the display will update 
+   to the correct time and indicate that the adjustment has been made.  
+   To entertain skeptics, the front panel light will blink in time with 
+   each frame received and decoded from WWVB; once per minute when  all 
+   is working correctly.
+
+7. Start modifying it.  This circuit is designed around general purpose 
+   hardware and deliberately put together with impermanent wiring 
+   connections: The Arduino is a general purpose microcontroller and 
+   is grafted here to a real time clock, a WWVB receiver module, and a 
+   16x2 character LCD.  This is a great starting point for your 
+   experiments in timekeeping. 
+
