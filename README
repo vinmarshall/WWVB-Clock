@@ -1,4 +1,5 @@
 Code for the WWVB Clock in Popular Science's April 2010 issue.
+http://www.popsci.com/diy/article/2010-03/build-clock-uses-atomic-timekeeping
 
 wwvb_clock.pde:  This is the main WWVB clock code.
 
