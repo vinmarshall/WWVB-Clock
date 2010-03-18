@@ -1,17 +1,51 @@
-/* WWVB Test Signal
+/* WWVB Test Signal v 1.0
  *
- * C-Max CMMR-6P-60 TCO Positive Output Signal Emulation
+ * This code uses an Arduino to simulate the C-Max CMMR-6P TCO positive 
+ * output signal.  This was written for debugging WWVB Clock 
+ * Receiver code.  
  * 
- * This code is adapted from the WWVB Receiver Simulator provided on 
- * http://duinolab.blogspot.com and credited to Capt.Tagon.
+ * This code is adapted from the WWVB Receiver Simulator provided by 
+ * Capt.Tagon at duinolab.blogspot.com.  It expands on that code by 
+ * incrementing the time and date starting from that set in the 
+ * setup() routine.  This also contains debugging code to display 
+ * this value on the Serial monitor.
+ * 
+ * This code supports the "Atomic Clock" article in the April 2010 issue
+ * of Popular Science.  There is also a schematic for this project.  There
+ * is also WWVB signal simulator code, to facilitate debugging and 
+ * hacking on this project when the reception of the WWVB signal 
+ * itself is less than stellar.
+ * 
+ * The code for both the clock and the WWVB simulator, and the schematic
+ * are available online at:
+ * http://www.popsci.com/diy/article/2010-03/build-clock-uses-atomic-timekeeping
+ * 
+ * and on GitHub at: http://github.com/vinmarshall/WWVB-Clock
  *
- * It expands on that code by incrementing the time and date starting
- * from Jan 01, 2010 00:00 UTC
+ * 
+ * Copyright (c) 2010 Vin Marshall (vlm@2552.com, www.2552.com)
  *
- * This also contains debugging code to display this value on the Serial 
- * monitor.
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use,
+ * copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following
+ * conditions:
+ * 
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  *
- * Vin Marshall // vinmarshall@gmail.com // www.2552.com 
  */
 
 #include <stdio.h>
@@ -20,9 +54,8 @@ int txPin = 13;
 
 /* WWVB time format struct - acts as an overlay on wwvbRxBuffer to extract time/date data.
  * All this points to a 64 bit buffer wwvbRxBuffer that the bits get read from as the
- * sample data stream is transmitted.
+ * sample data stream is transmitted.   (Thanks to Capt.Tagon @ duinolab.blogspot.com)
  *
- * This is taken directly from the code credited to "captain" at duinolab.blogspot.com
  */
 
 struct wwvbBuffer {
@@ -63,7 +96,15 @@ struct wwvbBuffer * buffer = (struct wwvbBuffer *) malloc(sizeof(struct wwvbBuff
 unsigned long long * timeBits = (unsigned long long *) buffer;
 
 
+/*
+ * setup 
+ * 
+ * uC Initialization
+ */
+
 void setup() {
+
+	// Setup the Serial port out and the WWVB signal output pin
 	Serial.begin(9600);
         pinMode(txPin, OUTPUT);
 
@@ -84,6 +125,13 @@ void setup() {
         buffer->Leapyear = 0;
         buffer->Leapsec = 0;
 }
+
+
+/*
+ * loop
+ *
+ * Main program loop 
+ */
 
 void loop() {
 
@@ -191,6 +239,12 @@ void loop() {
 }
 
 
+/*
+ * sendMark
+ * 
+ * Output a Frame / Position marker bit
+ */
+
 void sendMark() {
   
   // Send low for 0.8 sec
@@ -204,6 +258,13 @@ void sendMark() {
   return;
 }
 
+
+/*
+ * sendWeighted
+ *
+ * Output a Weighted bit (1)
+ */
+
 void sendWeighted() {
   
   // Send low for 0.5 sec
@@ -216,6 +277,13 @@ void sendWeighted() {
   
   return;
 }
+
+
+/*
+ * sendUnweighted
+ *
+ * Output an Unweighted bit (0)
+ */
 
 void sendUnweighted() {
   

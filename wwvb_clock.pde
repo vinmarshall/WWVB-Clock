@@ -19,11 +19,13 @@
  * of Popular Science.  There is also a schematic for this project.  There
  * is also WWVB signal simulator code, to facilitate debugging and 
  * hacking on this project when the reception of the WWVB signal 
- * itself is less than stellar (another great idea from Capt.Tagon).
+ * itself is less than stellar.
  * 
  * The code for both the clock and the WWVB simulator, and the schematic
  * are available online at:
  * http://www.popsci.com/diy/article/2010-03/build-clock-uses-atomic-timekeeping
+ * 
+ * and on GitHub at: http://github.com/vinmarshall/WWVB-Clock
  * 
  * Version 1.0
  * Notes: 
@@ -63,6 +65,9 @@
 
 // 
 // Initializations
+
+// Debugging mode - prints debugging information on the Serial port.
+boolean debug = true;
 
 // Front Panel Light
 int lightPin = 13;
@@ -209,8 +214,8 @@ unsigned long long lastFrameBuffer;
 void setup() {
 
   // Debugging information prints to the serial line
-  Serial.begin(9600);
-  Serial.println("Ready.");
+  if (debug) { Serial.begin(9600); }
+  if (debug) { Serial.println("Ready."); }
 
   // Initialize the I2C Two Wire Communication for the RTC
   Wire.begin();
@@ -304,7 +309,7 @@ void updateDisplay() {
   lcd.print(time);
 
   // Update the second row
-  // Cycle through our list of messages
+  // Cycle through our list of status messages
   lcd.setCursor(0,1);
   int cycle = bcd2dec(second) / 10; // This gives us 6 slots for messages
   char msg[17]; // 16 chars per line on display
@@ -401,14 +406,13 @@ char* buildTimeString() {
   return rv;
 }
 
-int bcd2dec(int bcd) {
-      return ( (bcd>>4) * 10) + (bcd % 16);
-}
 
-int dec2bcd(int dec) {
-      return ( (dec/10) << 4) + (dec % 10);
-} 
-
+/*
+ * getRTC
+ * 
+ * Read data from the DS1307 RTC over the I2C 2 wire interface.
+ * Data is stored in the uC's global clock variables.
+ */
 
 void getRTC() {
 
@@ -432,6 +436,13 @@ void getRTC() {
 }
 
 
+/*
+ * setRTC
+ * 
+ * Set the DS1307 RTC over the I2C 2 wire interface.
+ * Data is read from the uC's global clock variables.
+ */
+
 void setRTC() {
 
   // Begin the Transmission       
@@ -454,9 +465,16 @@ void setRTC() {
   Wire.endTransmission();
 }
 
+
+/*
+ * updateRTC
+ * 
+ * Update the time stored in the RTC to match the received WWVB frame.
+ */
+
 void updateRTC() {
 
-  // Find out how long since the frames On Time Marker (OTM)
+  // Find out how long since the frame's On Time Marker (OTM)
   // We'll need this adjustment when we set the time.
   unsigned int timeSinceFrame = millis() - frameEndTime;
   byte secondsSinceFrame = timeSinceFrame / 1000;
@@ -465,7 +483,7 @@ void updateRTC() {
   }
 
   // The OTM for a minute comes at the beginning of the frame, meaning that
-  // the WWVB time we have is now 1 minute + `second` seconds old.
+  // the WWVB time we have is now 1 minute + `secondsSinceFrame` seconds old.
   incrementWwvbMinute();
 
   // Set up data for the RTC clock write
@@ -503,6 +521,13 @@ void updateRTC() {
 }
 
 
+/*
+ * processBit()
+ * 
+ * Decode a received pulse.  Pulses are decoded according to the 
+ * length of time the pulse was in the low state.
+ */
+
 void processBit() {
 
   // Clear the bitReceived flag, as we're processing that bit.
@@ -539,7 +564,7 @@ void processBit() {
 
 	 // For the display update 
 	 lastBit = '*';
-         Serial.print("*");
+	 if (debug) { Serial.print("*"); }
  
 	 // Verify that our position data jives with this being 
 	 // a Frame start/end marker
@@ -547,18 +572,22 @@ void processBit() {
 	      (bitPosition == 60)  &&
               (bitError == 0)) {
 
+           // Process a received frame
 	   frameEndTime = pulseStartTime;
            lastFrameBuffer = receiveBuffer;
 	   digitalWrite(lightPin, HIGH);
            logFrameError(false);
-	   processFrame();
+
+	   if (debug) {
+             debugPrintFrame();
+           }
 
 	 } else {
 
            frameError = true;
 	 }
 
-	 // Reset our position counters
+	 // Reset the position counters
 	 framePosition = 0;
 	 bitPosition = 1;
 	 wasMark = false;
@@ -575,17 +604,17 @@ void processBit() {
 
   // Pulses > 0.8 sec are an error in reception
   } else {
-    buffer(-3);
+    buffer(-2);
     bitError++;
     wasMark = false;
   }
 
   // Reset everything if we have more than 60 bits in the frame.  This means
-  // we missed the frame markers somewhere along the line
+  // the frame markers went missing somewhere along the line
   if (frameError == true || bitPosition > 60) {
 
         // Debugging
-        Serial.print("  Frame Error\n");
+        if (debug) { Serial.print("  Frame Error\n"); }
 
         // Reset all of the frame pointers and flags
         frameError = false;
@@ -600,18 +629,32 @@ void processBit() {
 }
 
 
+/*
+ * logFrameError
+ *
+ * Log the error in the buffer that is a window on the past 10 frames. 
+ */
+
 void logFrameError(boolean err) {
 
   // Add a 1 to log errors to the buffer
   int add = err?1:0;
   errors[errIdx] = add;
 
-  // and move the buffer loop around pointer
+  // and move the buffer loop-around pointer
   if (++errIdx >= 10) { 
     errIdx = 0;
   }
 }
 
+
+/* 
+ * sumFrameErrors
+ * 
+ * Turn the errors in the frame error buffer into a number useful to display
+ * the quality of reception of late in the status messages.  Sums the errors
+ * in the frame error buffer.
+ */
 
 int sumFrameErrors() {
 
@@ -625,7 +668,13 @@ int sumFrameErrors() {
 } 
 
 
-void processFrame() {
+/*
+ * debugPrintFrame
+ * 
+ * Print the decoded frame over the seriail port
+ */
+
+void debugPrintFrame() {
 
   char time[255];
   byte minTen = (byte) wwvbFrame->MinTen;
@@ -650,30 +699,33 @@ void processFrame() {
 }
 
 
+/*
+ * buffer
+ *
+ * Places the received bits in the receive buffer in the order they
+ * were recived.  The first received bit goes in the highest order 
+ * bit of the receive buffer.
+ */
+
 void buffer(int bit) {
   
   // Process our bits 
   if (bit == 0) {
     lastBit = '0';
-    Serial.print("0");
+    if (debug) { Serial.print("0"); }
 
   } else if (bit == 1) {
     lastBit = '1';
-    Serial.print("1");
+    if (debug) { Serial.print("1"); }
 
   } else if (bit == -1) {
     lastBit = 'M';
-    Serial.print("M");
+    if (debug) { Serial.print("M"); }
     framePosition++;
 
   } else if (bit == -2) {
     lastBit = 'X';
-    Serial.print("X");
-
-  } else if (bit == -3) {
-    lastBit = 'Y';
-    Serial.print("X");
-  }
+    if (debug) { Serial.print("X"); }
 
   // Push the bit into the buffer.  The 0s and 1s are the only
   // ones we care about.  
@@ -685,6 +737,16 @@ void buffer(int bit) {
   bitPosition++;
 }
 
+
+/*
+ * incrementWwvbMinute
+ *
+ * The frame On Time Marker occurs at the beginning of the frame.  This means
+ * that the time in the frame is one minute old by the time it has been fully
+ * received.  Adding one to the minute can be somewhat complicated, in as much 
+ * as it can roll over the successive hours, days, and years in just the right 
+ * circumstances.  This handles that.
+ */
 
 void incrementWwvbMinute() {
   
@@ -742,6 +804,12 @@ void incrementWwvbMinute() {
 }
 
 
+/*
+ * wwvbChange
+ * 
+ * This is the interrupt servicing routine.  Changes in the level of the 
+ * received WWVB pulse are recorded here to be processed in processBit().
+ */
 
 void wwvbChange() {
 
@@ -757,4 +825,29 @@ void wwvbChange() {
   }
 
 }
+
+
+
+/*
+ * bcd2dec
+ * 
+ * Utility function to convert 2 bcd coded hex digits into an integer
+ */
+
+int bcd2dec(int bcd) {
+      return ( (bcd>>4) * 10) + (bcd % 16);
+}
+
+
+/*
+ * dec2bcd
+ * 
+ * Utility function to convert an integer into 2 bcd coded hex digits
+ */
+
+int dec2bcd(int dec) {
+      return ( (dec/10) << 4) + (dec % 10);
+} 
+
+
 
