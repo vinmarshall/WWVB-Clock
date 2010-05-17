@@ -726,6 +726,7 @@ void buffer(int bit) {
   } else if (bit == -2) {
     lastBit = 'X';
     if (debug) { Serial.print("X"); }
+  }
 
   // Push the bit into the buffer.  The 0s and 1s are the only
   // ones we care about.  
