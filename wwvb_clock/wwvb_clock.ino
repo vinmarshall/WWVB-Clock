@@ -420,19 +420,19 @@ void getRTC() {
   Wire.beginTransmission(DS1307);
 
   // Point the request at the first register (seconds)
-  Wire.send(RTC_SECS);
+  Wire.write(RTC_SECS);
 
   // End the Transmission and Start Listening
   Wire.endTransmission();
   Wire.requestFrom(DS1307, 8);
-  second = Wire.receive();
-  minute = Wire.receive();
-  hour = Wire.receive();
-  day = Wire.receive();
-  date = Wire.receive();
-  month = Wire.receive();
-  year = Wire.receive();
-  ctrl = Wire.receive();
+  second = Wire.read();
+  minute = Wire.read();
+  hour = Wire.read();
+  day = Wire.read();
+  date = Wire.read();
+  month = Wire.read();
+  year = Wire.read();
+  ctrl = Wire.read();
 }
 
 
@@ -449,17 +449,17 @@ void setRTC() {
   Wire.beginTransmission(DS1307);
 
   // Start at the beginning
-  Wire.send(RTC_SECS);
+  Wire.write(RTC_SECS);
 
   // Send data for each register in order
-  Wire.send(second);
-  Wire.send(minute);
-  Wire.send(hour);
-  Wire.send(day);
-  Wire.send(date);
-  Wire.send(month);
-  Wire.send(year);
-  Wire.send(ctrl);
+  Wire.write(second);
+  Wire.write(minute);
+  Wire.write(hour);
+  Wire.write(day);
+  Wire.write(date);
+  Wire.write(month);
+  Wire.write(year);
+  Wire.write(ctrl);
 
   // End the transmission
   Wire.endTransmission();
