@@ -1,9 +1,9 @@
 Code for the WWVB Clock in Popular Science's April 2010 issue.
 http://www.popsci.com/diy/article/2010-03/build-clock-uses-atomic-timekeeping
 
-wwvb_clock.pde:  This is the main WWVB clock code.
+wwvb_clock.ino:  This is the main WWVB clock code.
 
-wwvb_signal_simulator.pde: This simulates the WWVB signal for development 
+wwvb_signal_simulator.ino: This simulates the WWVB signal for development 
   and testing and provides a test harness for WWVB receiving clock development.
 
 This project implements a WWVB receiver using an Arduino, a C-Max WWVB receiver
